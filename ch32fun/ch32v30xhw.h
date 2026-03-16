@@ -18,7 +18,7 @@ typedef enum IRQn
 	Ecall_M_Mode_IRQn = 5,   /* 5 Ecall M Mode Interrupt                             */
 	Ecall_U_Mode_IRQn = 8,   /* 8 Ecall U Mode Interrupt                             */
 	Break_Point_IRQn = 9,    /* 9 Break Point Interrupt                              */
-    SysTicK_IRQn = 12,       /* 12 System timer Interrupt                            */
+    SysTick_IRQn = 12,       /* 12 System timer Interrupt                            */
     Software_IRQn = 14,      /* 14 software Interrupt                                */
 
 	/******  RISC-V specific Interrupt Numbers *********************************************************/
@@ -260,6 +260,7 @@ typedef struct
 	__IO uint64_t CMP;
 } SysTick_Type;
 
+#define funSysTick32() (SysTick->CNT)
 
 #endif /* __ASSEMBLER__*/
 
@@ -430,7 +431,9 @@ typedef struct
 	__IO uint32_t              INTENR;
 	__IO uint32_t              ERRSR;
 	__IO uint32_t              BTIMR;
-	uint32_t                   RESERVED0[88];
+	__IO uint32_t              TTCTLR;
+	__IO uint32_t              TTCNT;
+	uint32_t                   RESERVED0[86];
 	CAN_TxMailBox_TypeDef      sTxMailBox[3];
 	CAN_FIFOMailBox_TypeDef    sFIFOMailBox[2];
 	uint32_t                   RESERVED1[12];
@@ -927,6 +930,8 @@ typedef struct
 typedef struct
 {
     __IO uint32_t EXTEN_CTR;
+    __IO uint32_t EXTEN_CTR2;
+    __IO uint32_t FEATURE_SIGN;
 } EXTEN_TypeDef;
 
 /* The reference manual for the ch32v2xx/v3xx reference this as "CTR" field in the "EXTEND" register so adding an alias here. */
@@ -1757,8 +1762,9 @@ typedef struct{
 #define I2C1_BASE                               (APB1PERIPH_BASE + 0x5400)
 #define I2C2_BASE                               (APB1PERIPH_BASE + 0x5800)
 #define CAN1_BASE                               (APB1PERIPH_BASE + 0x6400)
-#define CAN2_BASE             (APB1PERIPH_BASE + 0x6800)
+#define CAN2_BASE                               (APB1PERIPH_BASE + 0x6800)
 #define BKP_BASE                                (APB1PERIPH_BASE + 0x6C00)
+#define BKP2_BASE                               (APB1PERIPH_BASE + 0x6C40)
 #define PWR_BASE                                (APB1PERIPH_BASE + 0x7000)
 #define DAC_BASE              					(APB1PERIPH_BASE + 0x7400)
 
@@ -2547,7 +2553,7 @@ typedef struct{
 #define CAN_TXMI0R_TXRQ                         ((uint32_t)0x00000001) /* Transmit Mailbox Request */
 #define CAN_TXMI0R_RTR                          ((uint32_t)0x00000002) /* Remote Transmission Request */
 #define CAN_TXMI0R_IDE                          ((uint32_t)0x00000004) /* Identifier Extension */
-#define CAN_TXMI0R_EXID                         ((uint32_t)0x001FFFF8) /* Extended Identifier */
+#define CAN_TXMI0R_EXID                         ((uint32_t)0xFFFFFFF8) /* Extended Identifier */
 #define CAN_TXMI0R_STID                         ((uint32_t)0xFFE00000) /* Standard Identifier or Extended Identifier */
 
 /******************  Bit definition for CAN_TXMDT0R register  *******************/
@@ -2571,7 +2577,7 @@ typedef struct{
 #define CAN_TXMI1R_TXRQ                         ((uint32_t)0x00000001) /* Transmit Mailbox Request */
 #define CAN_TXMI1R_RTR                          ((uint32_t)0x00000002) /* Remote Transmission Request */
 #define CAN_TXMI1R_IDE                          ((uint32_t)0x00000004) /* Identifier Extension */
-#define CAN_TXMI1R_EXID                         ((uint32_t)0x001FFFF8) /* Extended Identifier */
+#define CAN_TXMI1R_EXID                         ((uint32_t)0xFFFFFFF8) /* Extended Identifier */
 #define CAN_TXMI1R_STID                         ((uint32_t)0xFFE00000) /* Standard Identifier or Extended Identifier */
 
 /*******************  Bit definition for CAN_TXMDT1R register  ******************/
@@ -2595,7 +2601,7 @@ typedef struct{
 #define CAN_TXMI2R_TXRQ                         ((uint32_t)0x00000001) /* Transmit Mailbox Request */
 #define CAN_TXMI2R_RTR                          ((uint32_t)0x00000002) /* Remote Transmission Request */
 #define CAN_TXMI2R_IDE                          ((uint32_t)0x00000004) /* Identifier Extension */
-#define CAN_TXMI2R_EXID                         ((uint32_t)0x001FFFF8) /* Extended identifier */
+#define CAN_TXMI2R_EXID                         ((uint32_t)0xFFFFFFF8) /* Extended identifier */
 #define CAN_TXMI2R_STID                         ((uint32_t)0xFFE00000) /* Standard Identifier or Extended Identifier */
 
 /*******************  Bit definition for CAN_TXMDT2R register  ******************/
@@ -2618,7 +2624,7 @@ typedef struct{
 /*******************  Bit definition for CAN_RXMI0R register  *******************/
 #define CAN_RXMI0R_RTR                          ((uint32_t)0x00000002) /* Remote Transmission Request */
 #define CAN_RXMI0R_IDE                          ((uint32_t)0x00000004) /* Identifier Extension */
-#define CAN_RXMI0R_EXID                         ((uint32_t)0x001FFFF8) /* Extended Identifier */
+#define CAN_RXMI0R_EXID                         ((uint32_t)0xFFFFFFF8) /* Extended Identifier */
 #define CAN_RXMI0R_STID                         ((uint32_t)0xFFE00000) /* Standard Identifier or Extended Identifier */
 
 /*******************  Bit definition for CAN_RXMDT0R register  ******************/
@@ -2641,7 +2647,7 @@ typedef struct{
 /*******************  Bit definition for CAN_RXMI1R register  *******************/
 #define CAN_RXMI1R_RTR                          ((uint32_t)0x00000002) /* Remote Transmission Request */
 #define CAN_RXMI1R_IDE                          ((uint32_t)0x00000004) /* Identifier Extension */
-#define CAN_RXMI1R_EXID                         ((uint32_t)0x001FFFF8) /* Extended identifier */
+#define CAN_RXMI1R_EXID                         ((uint32_t)0xFFFFFFF8) /* Extended identifier */
 #define CAN_RXMI1R_STID                         ((uint32_t)0xFFE00000) /* Standard Identifier or Extended Identifier */
 
 /*******************  Bit definition for CAN_RXMDT1R register  ******************/
@@ -5140,8 +5146,8 @@ typedef struct{
 #define RCC_USBHSDIV_OFFSET						(24)
 #define RCC_USBHSDIV_MASK						((uint32_t)(7<<RCC_USBHSDIV_OFFSET))
 #define RCC_USBHSPLLSRC							((uint32_t)(1<<27))
-#define RCC_USBHSCLK_OFFSET						(3)
-#define RCC_USBHSCLK_MASK						((uint32_t)(3<<RCC_USBHSCLK))
+#define RCC_USBHSCLK_OFFSET						(28)
+#define RCC_USBHSCLK_MASK						((uint32_t)(3<<RCC_USBHSCLK_OFFSET))
 #define RCC_USBHSPLL							((uint32_t)(1<<30))
 #define RCC_USBHSSRC							((uint32_t)(1<<31))
 
@@ -8601,7 +8607,7 @@ typedef struct
 #define PWR_FLAG_WU               ((uint32_t)0x00000001)
 #define PWR_FLAG_SB               ((uint32_t)0x00000002)
 #define PWR_FLAG_PVDO             ((uint32_t)0x00000004)
-
+#define PVD_MAX_THRESHOLD_LVL     7
 
 
 /* ch32v00x_rcc.h ------------------------------------------------------------*/
@@ -9014,6 +9020,18 @@ typedef struct
 #define RTC_FLAG_OW       ((uint16_t)0x0004) /* Overflow flag */
 #define RTC_FLAG_ALR      ((uint16_t)0x0002) /* Alarm flag */
 #define RTC_FLAG_SEC      ((uint16_t)0x0001) /* Second flag */
+
+// Wait for last write operation to complete, enter configuration mode
+// perform configuration
+// wait for last write operation to complete,exit configuration mode
+#define RTC_CONFIG_CHANGE(a) do { \
+	while (!(RTC->CTLRL & RTC_FLAG_RTOFF)); \
+	RTC->CTLRL |= RTC_CTLRL_CNF; \
+	{a} \
+	while (!(RTC->CTLRL & RTC_FLAG_RTOFF)); \
+	RTC->CTLRL &= ~RTC_CTLRL_CNF; \
+} while (0)
+
 
 #if defined(CH32V20x_D8) || defined(CH32V20x_D8W)
 #define RB_OSC32K_HTUNE       (0x1FE0)
